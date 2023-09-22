@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 
 @app.route('/', strict_slashes=False)
-def hello():
+def hello_hbnb():
     """
         Flask route at root (http://localhost:5000/).
         Displays 'Hello HBNB!'.
