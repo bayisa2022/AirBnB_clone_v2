@@ -1,36 +1,55 @@
-#!/usr/bin/python3 # shebang line
+#!/usr/bin/python3
+""" This is the 5th Flask setup script. """
 
-from flask import Flask  # import Flask class
-app = Flask(__name__) # create Flask app instance 
-app.url_map.strict_slashes = False # disable strict slashes 
+from flask import Flask
 
-import re # import regex module
+app = Flask(__name__)
 
-@app.route('/') # root route
-def hello(): # hello function 
-    return 'Hello HBNB!' # return string
 
-@app.route('/hbnb') # hbnb route
-def hbnb(): # hbnb function
-    return 'HBNB' # return string
+@app.route('/', strict_slashes=False)
+def hello():
+    """
+        Flask route at root.
+        Displays 'Hello HBNB!'.
+    """
+    return "Hello HBNB!"
 
-@app.route('/c/<text>') # c route with variable 
-def c(text): # c function 
-    text = text.replace('_', ' ') # replace underscores
-    return 'C ' + text # return string
 
-@app.route('/python') # python route 
-@app.route('/python/<text>') # python route with variable
-def python(text='is cool'): # python function
-    text = text.replace('_', ' ') # replace underscores
-    return 'Python ' + text # return string 
+@app.route('/hbnb', strict_slashes=False)
+def hbnb():
+    """
+        Flask route at /hbnb.
+        Displays 'HBNB'.
+    """
+    return "HBNB"
 
-@app.route('/number/<n>') # number route with variable
-def number(n): # number function
-    if re.match(r'^-?\d+$', n): # check if n is integer
-        return '{} is a number'.format(n) # return string
-    else:
-        return 'Illegal input!' # return string
-        
-if __name__ == '__main__': # entry point
-    app.run(host='0.0.0.0', port=5000) # run app
+
+@app.route('/c/<text>', strict_slashes=False)
+def c(text):
+    """
+        Flask route at /c/<text>.
+        Displays 'C + <text>'.
+    """
+    return "C {}".format(text.replace('_', ' '))
+
+
+@app.route('/python', strict_slashes=False)
+@app.route('/python/<text>', strict_slashes=False)
+def python(text="is cool"):
+    """
+        Flask route at /python/(<text>).
+        Displays 'Python + <text>'.
+        Default value of <text> : 'is cool'.
+    """
+    return "Python {}".format(text.replace('_', ' '))
+
+
+@app.route('/number/<int:n>', strict_slashes=False)
+def number(n):
+    """
+        Flask route at /number/<n>.
+        Displays '<n> + is an number' if <n> is a int.
+    """
+    return "{} is a number".format(n)
+
+if __name__ == '__main__':
