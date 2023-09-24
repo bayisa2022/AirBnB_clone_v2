@@ -1,46 +1,74 @@
 #!/usr/bin/python3
-""" A script that starts a flask web application """
 from flask import Flask, render_template
+"""import class Flask, render_template method"""
+
+
 app = Flask(__name__)
 
 
 @app.route('/', strict_slashes=False)
 def hello_hbnb():
-    """ Prints a Message when / is called """
-    return 'Hello HBNB!'
+    """displays text
+    Returns:
+        text
+    """
+    return "Hello HBNB!"
 
 
 @app.route('/hbnb', strict_slashes=False)
-def hbnb():
-    """ Prints a Message when /hbnb is called """
-    return 'HBNB'
+def display_hbnb():
+    """displays text
+    Returns:
+        text
+    """
+    return "HBNB"
 
 
 @app.route('/c/<text>', strict_slashes=False)
-def c_is_fun(text):
-    """ Prints a Message when /c is called """
-    return "C " + text.replace('_', ' ')
+def display_C(text):
+    """displays text
+    Args:
+        text (str): text
+    Returns:
+        text
+    """
+    return 'C %s' % text.replace('_', ' ')
 
 
-@app.route('/python', strict_slashes=False)
+@app.route('/python', defaults={'text': 'is cool'}, strict_slashes=False)
+@app.route('/python/', defaults={'text': 'is cool'}, strict_slashes=False)
 @app.route('/python/<text>', strict_slashes=False)
-def python_is_cool(text='is_cool'):
-    """ Prints a Message when /python is called """
-    return "Python " + text.replace('_', ' ')
+def display_python(text):
+    """displays text
+    Args:
+        text (str): text
+    Returns:
+        text
+    """
+    return 'Python %s' % text.replace('_', ' ')
 
 
 @app.route('/number/<int:n>', strict_slashes=False)
-def n_is_number(n):
-    """ Prints a Message when /number is called only if n is an int"""
-    return "{:d} is a number".format(n)
+def display_num(n):
+    """displays text
+    Args:
+        n (int): number
+    Returns:
+        string
+    """
+    return "%d is a number" % n
 
 
 @app.route('/number_template/<int:n>', strict_slashes=False)
-def number_template(n):
-    """ display a HTML page only if n is an integer """
-    return render_template('5-number.html', value=n)
+def display_HTML(n):
+    """displays text
+    Args:
+        n (int): number
+    Returns:
+        HTML page
+    """
+    return render_template('5-number.html', n=n)
 
 
 if __name__ == "__main__":
-    """ Main Function """
     app.run(host='0.0.0.0', port=5000)
