@@ -1,53 +1,77 @@
 #!/usr/bin/python3
-"""
-Fabric script that distributes an archive to your web servers
-"""
+# Fabfile to distribute an archive to a web server.
 
-from fabric.api import env, put, run, local
-from os.path import exists, isfile
-from datetime import datetime
+import os.path
+from fabric.api import env
+from fabric.api import put
+from fabric.api import run
 
-env.hosts = ["52.3.251.115", "54.208.17.71"]
 env.user = "ubuntu"
-env.key_filename = '/home/ubuntu/.ssh/school'
+env.hosts = ['54.90.63.42', '100.24.242.135']
 
 
 def do_deploy(archive_path):
+    """Distributes an archive to a web server.
+       Returns True if successful and false if not
     """
-        Deploys an archive path if archive has generated correctly.
-    """
+    if os.path.isfile(archive_path) is False:
+        return False
+    fullFile = archive_path.split("/")[-1]
+    folder = fullFile.split(".")[0]
 
-    local("mkdir -p versions")
-    date = datetime.now().strftime("%Y%m%d%H%M%S")
-    archived_f_path = "versions/web_static_{}.tgz".format(date)
-    t_gzip_archive = local("tar -cvzf {} web_static".format(archived_f_path))
+    # Uploads archive to /tmp/ directory
+    if put(archive_path, "/tmp/{}".format(fullFile)).failed is True:
+        print("Uploading archive to /tmp/ failed")
+        return False
 
-    if t_gzip_archive.succeeded:
-        return archived_f_path
-    else:
-        return None
+    # Delete the archive folder on the server
+    if run("rm -rf /data/web_static/releases/{}/".
+           format(folder)).failed is True:
+        print("Deleting folder with archive(if already exists) failed")
+        return False
 
+    # Create a new archive folder
+    if run("mkdir -p /data/web_static/releases/{}/".
+           format(folder)).failed is True:
+        print("Creating new archive folder failed")
+        return False
 
-def do_deploy(archive_path):
-    """
-        Distribute archive.
-    """
-    if not exists(archive_path):
-        archived_file = archive_path[9:]
-        newest_version = "/data/web_static/releases/" + archived_file[:-4]
-        archived_file = "/tmp/" + archived_file
-        put(archive_path, "/tmp/")
-        run("sudo mkdir -p {}".format(newest_version))
-        run("sudo tar -xzf {} -C {}/".format(archived_file,
-                                             newest_version))
-        run("sudo rm {}".format(archived_file))
-        run("sudo mv {}/web_static/* {}".format(newest_version,
-                                                newest_version))
-        run("sudo rm -rf {}/web_static".format(newest_version))
-        run("sudo rm -rf /data/web_static/current")
-        run("sudo ln -s {} /data/web_static/current".format(newest_version))
+    # Uncompress archive to /data/web_static/current/ directory
+    if run("tar -xzf /tmp/{} -C /data/web_static/releases/{}/".
+           format(fullFile, folder)).failed is True:
+        print("Uncompressing archive to failed")
+        return False
 
-        print("New version deployed!")
-        return True
+    # Deletes latest archive from the server
+    if run("rm /tmp/{}".format(fullFile)).failed is True:
+        print("Deleting archive from /tmp/ directory dailed")
+        return False
 
-    return False
+    # Move folder from web_static to its parent folder,to expose the index
+    # files outsite the /we_static path
+    if run("mv /data/web_static/releases/{}/web_static/* "
+           "/data/web_static/releases/{}/".
+           format(folder, folder)).failed is True:
+        print("Moving content to archive folder before deletion failed")
+        return False
+
+    # Delete the empty web_static file, as its content have been moved to
+    # its parent directory
+    if run("rm -rf /data/web_static/releases/{}/web_static".
+           format(folder)).failed is True:
+        print("Deleting web_static folder failed")
+        return False
+
+    # Delete current folder being served (the symbolic link)
+    if run("rm -rf /data/web_static/current").failed is True:
+        print("Deleting 'current' folder failed")
+        return False
+
+    # Create new symbolic link on web server linked to new code version
+    if run("ln -s /data/web_static/releases/{}/ /data/web_static/current".
+           format(folder)).failed is True:
+        print("Creating new symbolic link to new code version failed")
+        return False
+
+    print("New version deployed!")
+    return True
